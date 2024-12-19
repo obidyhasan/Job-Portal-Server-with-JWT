@@ -10,7 +10,11 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://job-portal-pro.web.app"],
+    origin: [
+      "http://localhost:5174",
+      "https://job-portal-pro.web.app",
+      "https://job-portal-pro.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -79,15 +83,12 @@ async function run() {
         .send({ LogoutSuccess: true });
     });
 
-    app.get("/jobs", verifyToken, async (req, res) => {
+    app.get("/jobs", async (req, res) => {
       const email = req.query.email;
       let query = {};
 
       if (email) {
         query = { hr_email: email };
-        if (req.user.email !== req.query.email) {
-          return res.status(403).send({ message: "forbidden access" });
-        }
       }
 
       const result = await jobCollection.find(query).toArray();
