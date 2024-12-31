@@ -12,6 +12,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5174",
+      "http://localhost:5173",
       "https://job-portal-pro.web.app",
       "https://job-portal-pro.firebaseapp.com",
     ],
@@ -85,13 +86,34 @@ async function run() {
 
     app.get("/jobs", async (req, res) => {
       const email = req.query.email;
+      const { search, sort, min, max } = req.query;
       let query = {};
 
       if (email) {
         query = { hr_email: email };
       }
 
-      const result = await jobCollection.find(query).toArray();
+      // Sort By Price
+      let options = {};
+      if (sort === "true") {
+        options = {
+          sort: { "salaryRange.min": -1 },
+        };
+      }
+
+      if (search) {
+        query = { ...query, title: { $regex: search, $options: "i" } };
+      }
+
+      if (min && max) {
+        query = {
+          ...query,
+          "salaryRange.min": { $gte: parseInt(min) },
+          "salaryRange.max": { $lte: parseInt(max) },
+        };
+      }
+
+      const result = await jobCollection.find(query, options).toArray();
       res.send(result);
     });
 
